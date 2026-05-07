@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
+import CameraCapture from "@/components/CameraCapture";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ export default function ChecklistRun() {
   const user = storage.getUser()!;
   const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [photoForItem, setPhotoForItem] = useState<string | null>(null);
+  const [photoMode, setPhotoMode] = useState<"choose" | "camera">("choose");
   const [showSign, setShowSign] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [syncStep, setSyncStep] = useState(0);
@@ -47,19 +49,24 @@ export default function ChecklistRun() {
     updateItem(item.id, { status, completedAt: new Date().toISOString() });
   };
 
-  const handleFileSelected = async (file: File) => {
+  const persistPhoto = async (dataUrl: string) => {
     if (!photoForItem) return;
+    toast.loading("Enviando foto à biblioteca SharePoint…", { id: "upload" });
+    await new Promise((r) => setTimeout(r, 600));
+    updateItem(photoForItem, { photo: dataUrl, status: "ok", completedAt: new Date().toISOString() });
+    toast.success("Foto sincronizada", { id: "upload" });
+    setPhotoForItem(null);
+    setPhotoMode("choose");
+  };
+
+  const handleFileSelected = async (file: File) => {
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-    toast.loading("Enviando foto à biblioteca SharePoint…", { id: "upload" });
-    await new Promise((r) => setTimeout(r, 600));
-    updateItem(photoForItem, { photo: dataUrl, status: "ok", completedAt: new Date().toISOString() });
-    toast.success("Foto sincronizada", { id: "upload" });
-    setPhotoForItem(null);
+    await persistPhoto(dataUrl);
   };
 
   const total = checklist.items.length;
@@ -229,40 +236,53 @@ export default function ChecklistRun() {
       </Card>
 
       {/* Photo dialog */}
-      <Dialog open={!!photoForItem} onOpenChange={(o) => !o && setPhotoForItem(null)}>
+      <Dialog
+        open={!!photoForItem}
+        onOpenChange={(o) => {
+          if (!o) {
+            setPhotoForItem(null);
+            setPhotoMode("choose");
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Adicionar foto de evidência</DialogTitle>
+            <DialogTitle>
+              {photoMode === "camera" ? "Tirar foto com a câmera" : "Adicionar foto de evidência"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
-              />
-              <div className="rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center">
+
+          {photoMode === "camera" ? (
+            <CameraCapture
+              onCapture={(dataUrl) => persistPhoto(dataUrl)}
+              onCancel={() => setPhotoMode("choose")}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+              <button
+                type="button"
+                onClick={() => setPhotoMode("camera")}
+                className="text-left rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center"
+              >
                 <Camera className="w-8 h-8 text-accent" />
                 <p className="font-medium text-sm">Tirar foto</p>
-                <p className="text-xs text-muted-foreground">Usar câmera</p>
-              </div>
-            </label>
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
-              />
-              <div className="rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center">
-                <ImageIcon className="w-8 h-8 text-accent" />
-                <p className="font-medium text-sm">Escolher do dispositivo</p>
-                <p className="text-xs text-muted-foreground">Galeria / arquivos</p>
-              </div>
-            </label>
-          </div>
+                <p className="text-xs text-muted-foreground">Usar câmera do dispositivo</p>
+              </button>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
+                />
+                <div className="rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center">
+                  <ImageIcon className="w-8 h-8 text-accent" />
+                  <p className="font-medium text-sm">Escolher do dispositivo</p>
+                  <p className="text-xs text-muted-foreground">Galeria / arquivos</p>
+                </div>
+              </label>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
