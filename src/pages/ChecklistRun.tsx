@@ -5,7 +5,7 @@ import { Checklist, ChecklistItem } from "@/data/checklists";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -47,13 +47,17 @@ export default function ChecklistRun() {
     updateItem(item.id, { status, completedAt: new Date().toISOString() });
   };
 
-  const onPhotoCaptured = async () => {
+  const handleFileSelected = async (file: File) => {
     if (!photoForItem) return;
-    // Simulate uploading to SharePoint document library
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
     toast.loading("Enviando foto à biblioteca SharePoint…", { id: "upload" });
-    await new Promise((r) => setTimeout(r, 900));
-    const fakePhoto = `data:image/jpeg;base64,placeholder-${Date.now()}`;
-    updateItem(photoForItem, { photo: fakePhoto, status: "ok", completedAt: new Date().toISOString() });
+    await new Promise((r) => setTimeout(r, 600));
+    updateItem(photoForItem, { photo: dataUrl, status: "ok", completedAt: new Date().toISOString() });
     toast.success("Foto sincronizada", { id: "upload" });
     setPhotoForItem(null);
   };
@@ -226,11 +230,39 @@ export default function ChecklistRun() {
 
       {/* Photo dialog */}
       <Dialog open={!!photoForItem} onOpenChange={(o) => !o && setPhotoForItem(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Capturar evidência fotográfica</DialogTitle>
+            <DialogTitle>Adicionar foto de evidência</DialogTitle>
           </DialogHeader>
-          <FaceCapture onSuccess={onPhotoCaptured} label="Abrir câmera" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
+              />
+              <div className="rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center">
+                <Camera className="w-8 h-8 text-accent" />
+                <p className="font-medium text-sm">Tirar foto</p>
+                <p className="text-xs text-muted-foreground">Usar câmera</p>
+              </div>
+            </label>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
+              />
+              <div className="rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-smooth p-6 flex flex-col items-center gap-2 text-center">
+                <ImageIcon className="w-8 h-8 text-accent" />
+                <p className="font-medium text-sm">Escolher do dispositivo</p>
+                <p className="text-xs text-muted-foreground">Galeria / arquivos</p>
+              </div>
+            </label>
+          </div>
         </DialogContent>
       </Dialog>
 
