@@ -32,7 +32,7 @@ export default function Login() {
             <ShieldCheck className="w-6 h-6 text-accent-foreground" />
           </div>
           <div>
-            <p className="font-display text-lg font-bold">FaceCheck</p>
+            <p className="font-display text-lg font-bold">CheckList's</p>
             <p className="text-xs mono opacity-70 uppercase tracking-wider">SharePoint sync</p>
           </div>
         </div>

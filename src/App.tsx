@@ -10,7 +10,7 @@ import Verify from "./pages/Verify.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Checklists from "./pages/Checklists.tsx";
 import ChecklistRun from "./pages/ChecklistRun.tsx";
-import Architecture from "./pages/Architecture.tsx";
+
 import AppShell from "./components/AppShell.tsx";
 import RequireAuth from "./components/RequireAuth.tsx";
 
