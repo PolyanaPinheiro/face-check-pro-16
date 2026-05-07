@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ShieldCheck, ListChecks, LayoutDashboard, Network, LogOut, ScanFace } from "lucide-react";
+import { ShieldCheck, ListChecks, LayoutDashboard, LogOut, ScanFace } from "lucide-react";
 import { storage } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +13,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const nav = [
     { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
     { to: "/app/checklists", label: "Checklists", icon: ListChecks },
-    { to: "/app/architecture", label: "Arquitetura", icon: Network },
   ];
 
   return (
@@ -25,7 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <ShieldCheck className="w-5 h-5 text-accent" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-display font-bold text-base">FaceCheck</span>
+              <span className="font-display font-bold text-base">CheckList's</span>
               <span className="text-[10px] text-muted-foreground mono uppercase tracking-wider">SharePoint sync</span>
             </div>
           </Link>

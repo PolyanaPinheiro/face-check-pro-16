@@ -1,7 +1,7 @@
 import { Checklist, seedChecklists } from "@/data/checklists";
 
 const USER_KEY = "flow_user";
-const CHECKLISTS_KEY = "flow_checklists";
+const CHECKLISTS_KEY = "flow_checklists_v2";
 const SUBMISSIONS_KEY = "flow_submissions";
 
 export type FlowUser = {
