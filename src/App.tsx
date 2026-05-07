@@ -50,14 +50,6 @@ const App = () => (
               </RequireAuth>
             }
           />
-          <Route
-            path="/app/architecture"
-            element={
-              <RequireAuth>
-                <AppShell><Architecture /></AppShell>
-              </RequireAuth>
-            }
-          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
