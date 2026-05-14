@@ -14,10 +14,18 @@ export default function Verify() {
   }
 
   const handleSuccess = ({ confidence }: { confidence: number }) => {
+    const now = new Date().toISOString();
     storage.setUser({
       ...pending,
       confidence,
-      faceVerifiedAt: new Date().toISOString(),
+      faceVerifiedAt: now,
+    });
+    storage.addAccess({
+      id: `acc-${Date.now()}`,
+      user: pending.name,
+      email: pending.email,
+      at: now,
+      confidence,
     });
     sessionStorage.removeItem("flow_pending_user");
     navigate("/app");

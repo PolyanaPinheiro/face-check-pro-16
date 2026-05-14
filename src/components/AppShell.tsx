@@ -1,19 +1,27 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { ShieldCheck, ListChecks, LayoutDashboard, LogOut, ScanFace } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ShieldCheck, LogOut, ScanFace, Menu, History, BookOpen, LayoutDashboard, ListChecks, ClipboardList } from "lucide-react";
 import { storage } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const user = storage.getUser();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const isAuthRoute = location.pathname === "/" || location.pathname === "/verify";
 
   if (isAuthRoute) return <>{children}</>;
 
-  const nav = [
-    { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
-    { to: "/app/checklists", label: "Checklists", icon: ListChecks },
+  const sidebar = [
+    { to: "/app", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/app/historico", label: "Histórico de Checklist", icon: ClipboardList },
+    { to: "/app/acessos", label: "Histórico de Acesso", icon: History },
+    { to: "/app/tutorial", label: "Como usar a plataforma", icon: BookOpen },
   ];
+
+  const go = (to: string) => { setOpen(false); navigate(to); };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -29,24 +37,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
-            {nav.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.end}
-                className={({ isActive }) =>
-                  `px-3.5 py-2 rounded-lg text-sm font-medium transition-smooth flex items-center gap-2 ${
-                    isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`
-                }
-              >
-                <n.icon className="w-4 h-4" />
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
-
           <div className="flex items-center gap-3">
             {user && (
               <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-success/10 border border-success/20">
@@ -57,28 +47,51 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             )}
-            <Button variant="ghost" size="icon" onClick={() => { storage.clearUser(); window.location.href = "/"; }}>
+            <Button variant="ghost" size="icon" onClick={() => { storage.clearUser(); window.location.href = "/"; }} title="Sair">
               <LogOut className="w-4 h-4" />
             </Button>
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <SheetHeader>
+                  <SheetTitle className="font-display flex items-center gap-2">
+                    <ListChecks className="w-5 h-5 text-accent" /> Menu
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="mt-6 flex flex-col gap-1">
+                  {sidebar.map((s) => (
+                    <button
+                      key={s.to}
+                      onClick={() => go(s.to)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth text-left ${
+                        location.pathname === s.to
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-secondary text-foreground"
+                      }`}
+                    >
+                      <s.icon className="w-4 h-4" />
+                      {s.label}
+                    </button>
+                  ))}
+                </nav>
+                {user && (
+                  <div className="mt-8 p-4 rounded-xl bg-secondary/50 border border-border/50">
+                    <p className="text-xs mono uppercase text-muted-foreground">Sessão</p>
+                    <p className="font-semibold mt-1">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-[11px] mono text-success mt-2">
+                      Verificado · {user.confidence.toFixed(1)}%
+                    </p>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-        <nav className="md:hidden border-t flex">
-          {nav.map((n) => (
-            <NavLink
-              key={n.to}
-              to={n.to}
-              end={n.end}
-              className={({ isActive }) =>
-                `flex-1 py-2.5 text-xs font-medium flex flex-col items-center gap-1 ${
-                  isActive ? "text-accent" : "text-muted-foreground"
-                }`
-              }
-            >
-              <n.icon className="w-4 h-4" />
-              {n.label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">{children}</main>
