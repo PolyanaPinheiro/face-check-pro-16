@@ -2,23 +2,29 @@ import { Link } from "react-router-dom";
 import { storage } from "@/lib/storage";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ListChecks, ScanFace, CheckCircle2, Clock, Cloud, Activity } from "lucide-react";
+import { ArrowRight, ClipboardList, CheckCircle2, Clock, Cloud, Activity, PlayCircle } from "lucide-react";
 
 export default function Dashboard() {
   const user = storage.getUser()!;
-  const checklists = storage.getChecklists();
   const submissions = storage.getSubmissions();
 
-  const completedToday = submissions.filter(
-    (s) => new Date(s.completedAt).toDateString() === new Date().toDateString()
-  ).length;
-  const synced = submissions.filter((s) => s.syncedToSharePoint).length;
-
-  const stats = [
-    { label: "Checklists ativos", value: checklists.length, icon: ListChecks, accent: "text-accent" },
-    { label: "Concluídos hoje", value: completedToday, icon: CheckCircle2, accent: "text-success" },
-    { label: "Sincronizados SharePoint", value: synced, icon: Cloud, accent: "text-primary" },
-    { label: "Última biometria", value: `${user.confidence.toFixed(1)}%`, icon: ScanFace, accent: "text-accent" },
+  const actions = [
+    {
+      to: "/app/checklist/novo",
+      title: "Fazer novo Checklist",
+      desc: "Inicie um CheckList de Setup com identificação biométrica do responsável.",
+      icon: PlayCircle,
+      cta: "Iniciar",
+      featured: true,
+    },
+    {
+      to: "/app/historico",
+      title: "Histórico Checklist",
+      desc: "Consulte e filtre checklists anteriores por período, turno e linha.",
+      icon: ClipboardList,
+      cta: "Abrir histórico",
+      featured: false,
+    },
   ];
 
   return (
@@ -35,27 +41,40 @@ export default function Dashboard() {
             Bem-vinda, {user.name.split(" ")[0]}.
           </h1>
           <p className="text-primary-foreground/75 max-w-lg">
-            Você tem <span className="font-semibold text-accent">{checklists.length} checklists</span> disponíveis hoje.
-            Cada item executado é assinado com sua biometria e enviado ao SharePoint.
+            Inicie um novo checklist ou consulte o histórico das execuções anteriores. Cada item é assinado biometricamente e enviado ao SharePoint.
           </p>
-          <Button asChild size="lg" className="gradient-accent text-accent-foreground hover:opacity-90 gap-2 shadow-glow mt-2">
-            <Link to="/app/checklists">
-              Ver checklists <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <Card key={s.label} className="p-5 shadow-card border-border/60 transition-smooth hover:shadow-elegant hover:-translate-y-0.5">
-            <div className="flex items-start justify-between">
-              <s.icon className={`w-5 h-5 ${s.accent}`} />
-              <span className="text-[10px] mono text-muted-foreground uppercase">live</span>
+      {/* Actions */}
+      <section className="grid md:grid-cols-2 gap-5">
+        {actions.map((a) => (
+          <Card
+            key={a.to}
+            className={`p-7 shadow-card border-border/60 transition-smooth hover:shadow-elegant hover:-translate-y-0.5 ${
+              a.featured ? "border-accent/40 bg-gradient-to-br from-card to-accent/5" : ""
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`w-14 h-14 rounded-2xl grid place-items-center shadow-glow ${
+                a.featured ? "gradient-accent" : "gradient-hero"
+              }`}>
+                <a.icon className={`w-7 h-7 ${a.featured ? "text-accent-foreground" : "text-accent"}`} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold">{a.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1.5">{a.desc}</p>
+                <Button
+                  asChild
+                  className={`mt-5 gap-2 ${a.featured ? "gradient-accent text-accent-foreground hover:opacity-90 shadow-glow" : ""}`}
+                  variant={a.featured ? "default" : "outline"}
+                >
+                  <Link to={a.to}>
+                    {a.cta} <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
-            <p className="font-display text-3xl font-bold mt-3">{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
           </Card>
         ))}
       </section>
@@ -64,23 +83,24 @@ export default function Dashboard() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-bold">Atividade recente</h2>
-          <span className="text-xs mono text-muted-foreground">SHAREPOINT SYNC LOG</span>
+          <Link to="/app/historico" className="text-xs mono text-accent hover:underline">VER TODOS</Link>
         </div>
         <Card className="divide-y shadow-card border-border/60">
           {submissions.length === 0 && (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Nenhum checklist enviado ainda. Comece pelo painel de checklists.
+              Nenhum checklist enviado ainda. Comece por "Fazer novo Checklist".
             </div>
           )}
-          {submissions.slice(0, 6).map((s) => (
+          {submissions.slice(0, 4).map((s) => (
             <div key={s.id} className="p-4 flex items-center gap-4">
               <div className={`w-10 h-10 rounded-xl grid place-items-center ${s.failCount === 0 ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}>
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{s.checklistTitle}</p>
-                <p className="text-xs text-muted-foreground mono">
+                <p className="text-xs text-muted-foreground mono truncate">
                   {new Date(s.completedAt).toLocaleString("pt-BR")} · {s.okCount} OK · {s.failCount} falhas
+                  {s.line && ` · Linha ${s.line}`}{s.sku && ` · SKU ${s.sku}`}
                 </p>
               </div>
               <div className="hidden sm:flex items-center gap-1.5 text-xs mono">
