@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { storage } from "@/lib/storage";
+import { inferShift, storage } from "@/lib/storage";
 import { Checklist, ChecklistItem } from "@/data/checklists";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,17 @@ export default function ChecklistRun() {
   const [showSign, setShowSign] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [syncStep, setSyncStep] = useState(0);
-  const startedAt = useRef(Date.now());
+  const ctx = storage.getContext();
+  const startedAt = useRef(ctx ? new Date(ctx.startedAt).getTime() : Date.now());
 
   useEffect(() => {
     const found = storage.getChecklists().find((c) => c.id === id) || null;
     setChecklist(found);
   }, [id]);
+
+  useEffect(() => {
+    if (!ctx) navigate("/app/checklist/novo", { replace: true });
+  }, []);
 
   if (!checklist) {
     return <div className="text-center py-20 text-muted-foreground">Carregando…</div>;
@@ -92,12 +97,19 @@ export default function ChecklistRun() {
     }
     toast.success("Checklist sincronizado com SharePoint", { id: "sync" });
 
+    const endedAt = new Date().toISOString();
     storage.addSubmission({
       id: `sub-${Date.now()}`,
       checklistId: checklist.id,
       checklistTitle: checklist.title,
       user: user.name,
-      completedAt: new Date().toISOString(),
+      line: ctx?.line,
+      sku: ctx?.sku,
+      responsavel: ctx?.responsavel,
+      shift: inferShift(ctx?.startedAt || endedAt),
+      startedAt: ctx?.startedAt,
+      endedAt,
+      completedAt: endedAt,
       durationSec: Math.round((Date.now() - startedAt.current) / 1000),
       okCount,
       failCount,
@@ -105,6 +117,7 @@ export default function ChecklistRun() {
       sharepointItemId: `SP-${Math.floor(Math.random() * 90000 + 10000)}`,
     });
     storage.resetChecklist(checklist.id);
+    storage.clearContext();
     setSubmitting(false);
     setShowSign(false);
     navigate("/app");
