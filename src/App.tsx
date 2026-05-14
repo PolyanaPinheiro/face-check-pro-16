@@ -8,13 +8,20 @@ import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
 import Verify from "./pages/Verify.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
-import Checklists from "./pages/Checklists.tsx";
 import ChecklistRun from "./pages/ChecklistRun.tsx";
+import NewChecklist from "./pages/NewChecklist.tsx";
+import History from "./pages/History.tsx";
+import AccessHistory from "./pages/AccessHistory.tsx";
+import Tutorial from "./pages/Tutorial.tsx";
 
 import AppShell from "./components/AppShell.tsx";
 import RequireAuth from "./components/RequireAuth.tsx";
 
 const queryClient = new QueryClient();
+
+const wrap = (node: React.ReactNode) => (
+  <RequireAuth><AppShell>{node}</AppShell></RequireAuth>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,30 +33,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<Verify />} />
-          <Route
-            path="/app"
-            element={
-              <RequireAuth>
-                <AppShell><Dashboard /></AppShell>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/app/checklists"
-            element={
-              <RequireAuth>
-                <AppShell><Checklists /></AppShell>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/app/checklists/:id"
-            element={
-              <RequireAuth>
-                <AppShell><ChecklistRun /></AppShell>
-              </RequireAuth>
-            }
-          />
+          <Route path="/app" element={wrap(<Dashboard />)} />
+          <Route path="/app/checklist/novo" element={wrap(<NewChecklist />)} />
+          <Route path="/app/checklists/:id" element={wrap(<ChecklistRun />)} />
+          <Route path="/app/historico" element={wrap(<History />)} />
+          <Route path="/app/acessos" element={wrap(<AccessHistory />)} />
+          <Route path="/app/tutorial" element={wrap(<Tutorial />)} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
