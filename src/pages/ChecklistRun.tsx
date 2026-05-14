@@ -146,6 +146,27 @@ export default function ChecklistRun() {
           </div>
         </div>
 
+        {ctx && (
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-2.5 rounded-lg bg-secondary/60">
+              <p className="mono uppercase text-[10px] text-muted-foreground">Linha</p>
+              <p className="font-semibold mt-0.5">{ctx.line}</p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-secondary/60">
+              <p className="mono uppercase text-[10px] text-muted-foreground">SKU</p>
+              <p className="font-semibold mt-0.5">{ctx.sku}</p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-secondary/60">
+              <p className="mono uppercase text-[10px] text-muted-foreground">Responsável</p>
+              <p className="font-semibold mt-0.5 truncate">{ctx.responsavel}</p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-secondary/60">
+              <p className="mono uppercase text-[10px] text-muted-foreground">Início</p>
+              <p className="font-semibold mt-0.5 mono">{new Date(ctx.startedAt).toLocaleTimeString("pt-BR")}</p>
+            </div>
+          </div>
+        )}
+
         <div className="mt-5">
           <div className="flex items-center justify-between text-xs mono text-muted-foreground mb-2">
             <span>PROGRESSO</span>
