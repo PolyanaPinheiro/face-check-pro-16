@@ -66,13 +66,23 @@ export default function NewChecklist() {
             <Label htmlFor="line" className="flex items-center gap-1.5">
               <Factory className="w-3.5 h-3.5 text-accent" /> Linha
             </Label>
-            <Input id="line" placeholder="Ex.: Linha 03" value={line} onChange={(e) => setLine(e.target.value)} />
+            <Select value={line} onValueChange={setLine}>
+              <SelectTrigger id="line"><SelectValue placeholder="Selecione a linha" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                {LINE_OPTIONS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="sku" className="flex items-center gap-1.5">
               <Package className="w-3.5 h-3.5 text-accent" /> SKU
             </Label>
-            <Input id="sku" placeholder="Ex.: SKU-44219" value={sku} onChange={(e) => setSku(e.target.value)} />
+            <Select value={sku} onValueChange={setSku}>
+              <SelectTrigger id="sku"><SelectValue placeholder="Selecione o SKU" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                {SKU_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -80,7 +90,12 @@ export default function NewChecklist() {
           <Label htmlFor="resp" className="flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-accent" /> Responsável
           </Label>
-          <Input id="resp" placeholder="Nome do responsável" value={responsavel} onChange={(e) => { setResponsavel(e.target.value); setVerifiedConfidence(null); }} />
+          <Select value={responsavel} onValueChange={(v) => { setResponsavel(v); setVerifiedConfidence(null); }}>
+            <SelectTrigger id="resp"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
+            <SelectContent>
+              {RESPONSAVEL_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">A identidade do responsável precisa ser confirmada com reconhecimento facial.</p>
 
           <div className="flex items-center justify-between mt-3 p-3 rounded-xl border border-dashed bg-secondary/30">
