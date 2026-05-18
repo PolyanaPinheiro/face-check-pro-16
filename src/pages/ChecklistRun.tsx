@@ -350,12 +350,70 @@ export default function ChecklistRun() {
 
       {/* Sign dialog */}
       <Dialog open={showSign} onOpenChange={(o) => !submitting && setShowSign(o)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Assinatura biométrica final</DialogTitle>
+            <DialogTitle>Assinaturas biométricas finais</DialogTitle>
           </DialogHeader>
           {!submitting ? (
-            <FaceCapture onSuccess={submitToSharePoint} label="Confirmar identidade" />
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Três assinaturas são obrigatórias. Selecione o responsável e confirme com reconhecimento facial.
+              </p>
+              {[0, 1, 2].map((idx) => {
+                const sig = signatures[idx];
+                return (
+                  <Card key={idx} className="p-4 border-border/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-lg grid place-items-center ${sig ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"}`}>
+                          {sig ? <CheckCircle2 className="w-5 h-5" /> : <ScanFace className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs mono uppercase text-muted-foreground">Assinatura {idx + 1}</p>
+                          {sig ? (
+                            <p className="text-sm font-medium truncate">
+                              {sig.signer} · <span className="mono text-success">{sig.confidence.toFixed(1)}%</span>
+                            </p>
+                          ) : (
+                            <Select
+                              value={signerNames[idx]}
+                              onValueChange={(v) => setSignerNames((p) => { const n = [...p]; n[idx] = v; return n; })}
+                            >
+                              <SelectTrigger className="h-8 mt-1 w-48"><SelectValue placeholder="Responsável" /></SelectTrigger>
+                              <SelectContent>
+                                {RESPONSAVEL_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      </div>
+                      {!sig && (
+                        <Button size="sm" variant="outline" disabled={!signerNames[idx]} onClick={() => setActiveSigner(idx)}>
+                          Assinar
+                        </Button>
+                      )}
+                    </div>
+                    {activeSigner === idx && (
+                      <div className="mt-4 border-t pt-4">
+                        <FaceCapture
+                          onSuccess={({ confidence }) => handleSignerCapture(idx, confidence)}
+                          label="Iniciar câmera"
+                        />
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+              <div className="pt-2 flex justify-end">
+                <Button
+                  disabled={!allSigned}
+                  onClick={submitToSharePoint}
+                  className="gap-2 gradient-accent text-accent-foreground hover:opacity-90 shadow-glow"
+                >
+                  <Cloud className="w-4 h-4" /> Enviar ao SharePoint
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="py-8 space-y-4">
               {[
