@@ -118,6 +118,7 @@ export default function ChecklistRun() {
       durationSec: Math.round((Date.now() - startedAt.current) / 1000),
       okCount,
       failCount,
+      signatures,
       syncedToSharePoint: true,
       sharepointItemId: `SP-${Math.floor(Math.random() * 90000 + 10000)}`,
     });
@@ -127,6 +128,28 @@ export default function ChecklistRun() {
     setShowSign(false);
     navigate("/app");
   };
+
+  const handleSignerCapture = (idx: number, confidence: number) => {
+    const name = signerNames[idx].trim();
+    if (!name) {
+      toast.error("Selecione o nome do assinante.");
+      return;
+    }
+    if (signatures.some((s) => s.signer === name)) {
+      toast.error("Este responsável já assinou.");
+      return;
+    }
+    const sig: Signature = { signer: name, confidence, at: new Date().toISOString() };
+    setSignatures((prev) => {
+      const next = [...prev];
+      next[idx] = sig;
+      return next;
+    });
+    setActiveSigner(null);
+    toast.success(`Assinatura ${idx + 1} confirmada · ${confidence.toFixed(1)}%`);
+  };
+
+  const allSigned = [0, 1, 2].every((i) => signatures[i]);
 
   return (
     <div className="space-y-6">
