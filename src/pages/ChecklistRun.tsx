@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { inferShift, storage } from "@/lib/storage";
+import { inferShift, storage, type Signature } from "@/lib/storage";
 import { Checklist, ChecklistItem } from "@/data/checklists";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
 import CameraCapture from "@/components/CameraCapture";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RESPONSAVEL_OPTIONS } from "@/data/options";
 import { toast } from "sonner";
 
 export default function ChecklistRun() {
