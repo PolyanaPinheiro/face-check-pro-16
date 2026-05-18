@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight, Factory, Package, ScanFace, CheckCircle2, User } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
 import { storage } from "@/lib/storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LINE_OPTIONS, RESPONSAVEL_OPTIONS, SKU_OPTIONS } from "@/data/options";
 
 export default function NewChecklist() {
   const navigate = useNavigate();
