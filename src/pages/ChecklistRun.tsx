@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { inferShift, storage } from "@/lib/storage";
+import { inferShift, storage, type Signature } from "@/lib/storage";
 import { Checklist, ChecklistItem } from "@/data/checklists";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanFace, Cloud, AlertCircle, Loader2, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
 import CameraCapture from "@/components/CameraCapture";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RESPONSAVEL_OPTIONS } from "@/data/options";
 import { toast } from "sonner";
 
 export default function ChecklistRun() {
@@ -21,6 +23,9 @@ export default function ChecklistRun() {
   const [showSign, setShowSign] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [syncStep, setSyncStep] = useState(0);
+  const [signatures, setSignatures] = useState<Signature[]>([]);
+  const [signerNames, setSignerNames] = useState<string[]>(["", "", ""]);
+  const [activeSigner, setActiveSigner] = useState<number | null>(null);
   const ctx = storage.getContext();
   const startedAt = useRef(ctx ? new Date(ctx.startedAt).getTime() : Date.now());
 
@@ -113,6 +118,7 @@ export default function ChecklistRun() {
       durationSec: Math.round((Date.now() - startedAt.current) / 1000),
       okCount,
       failCount,
+      signatures,
       syncedToSharePoint: true,
       sharepointItemId: `SP-${Math.floor(Math.random() * 90000 + 10000)}`,
     });
@@ -122,6 +128,28 @@ export default function ChecklistRun() {
     setShowSign(false);
     navigate("/app");
   };
+
+  const handleSignerCapture = (idx: number, confidence: number) => {
+    const name = signerNames[idx].trim();
+    if (!name) {
+      toast.error("Selecione o nome do assinante.");
+      return;
+    }
+    if (signatures.some((s) => s.signer === name)) {
+      toast.error("Este responsável já assinou.");
+      return;
+    }
+    const sig: Signature = { signer: name, confidence, at: new Date().toISOString() };
+    setSignatures((prev) => {
+      const next = [...prev];
+      next[idx] = sig;
+      return next;
+    });
+    setActiveSigner(null);
+    toast.success(`Assinatura ${idx + 1} confirmada · ${confidence.toFixed(1)}%`);
+  };
+
+  const allSigned = [0, 1, 2].every((i) => signatures[i]);
 
   return (
     <div className="space-y-6">
@@ -322,12 +350,70 @@ export default function ChecklistRun() {
 
       {/* Sign dialog */}
       <Dialog open={showSign} onOpenChange={(o) => !submitting && setShowSign(o)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Assinatura biométrica final</DialogTitle>
+            <DialogTitle>Assinaturas biométricas finais</DialogTitle>
           </DialogHeader>
           {!submitting ? (
-            <FaceCapture onSuccess={submitToSharePoint} label="Confirmar identidade" />
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Três assinaturas são obrigatórias. Selecione o responsável e confirme com reconhecimento facial.
+              </p>
+              {[0, 1, 2].map((idx) => {
+                const sig = signatures[idx];
+                return (
+                  <Card key={idx} className="p-4 border-border/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-lg grid place-items-center ${sig ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"}`}>
+                          {sig ? <CheckCircle2 className="w-5 h-5" /> : <ScanFace className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs mono uppercase text-muted-foreground">Assinatura {idx + 1}</p>
+                          {sig ? (
+                            <p className="text-sm font-medium truncate">
+                              {sig.signer} · <span className="mono text-success">{sig.confidence.toFixed(1)}%</span>
+                            </p>
+                          ) : (
+                            <Select
+                              value={signerNames[idx]}
+                              onValueChange={(v) => setSignerNames((p) => { const n = [...p]; n[idx] = v; return n; })}
+                            >
+                              <SelectTrigger className="h-8 mt-1 w-48"><SelectValue placeholder="Responsável" /></SelectTrigger>
+                              <SelectContent>
+                                {RESPONSAVEL_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      </div>
+                      {!sig && (
+                        <Button size="sm" variant="outline" disabled={!signerNames[idx]} onClick={() => setActiveSigner(idx)}>
+                          Assinar
+                        </Button>
+                      )}
+                    </div>
+                    {activeSigner === idx && (
+                      <div className="mt-4 border-t pt-4">
+                        <FaceCapture
+                          onSuccess={({ confidence }) => handleSignerCapture(idx, confidence)}
+                          label="Iniciar câmera"
+                        />
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+              <div className="pt-2 flex justify-end">
+                <Button
+                  disabled={!allSigned}
+                  onClick={submitToSharePoint}
+                  className="gap-2 gradient-accent text-accent-foreground hover:opacity-90 shadow-glow"
+                >
+                  <Cloud className="w-4 h-4" /> Enviar ao SharePoint
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="py-8 space-y-4">
               {[

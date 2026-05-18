@@ -22,6 +22,12 @@ export type StartContext = {
   startedAt: string;
 };
 
+export type Signature = {
+  signer: string;
+  confidence: number;
+  at: string;
+};
+
 export type Submission = {
   id: string;
   checklistId: string;
@@ -37,6 +43,7 @@ export type Submission = {
   durationSec: number;
   okCount: number;
   failCount: number;
+  signatures?: Signature[];
   syncedToSharePoint: boolean;
   sharepointItemId?: string;
 };
