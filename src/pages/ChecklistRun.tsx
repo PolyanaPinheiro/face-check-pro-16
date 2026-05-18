@@ -23,6 +23,9 @@ export default function ChecklistRun() {
   const [showSign, setShowSign] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [syncStep, setSyncStep] = useState(0);
+  const [signatures, setSignatures] = useState<Signature[]>([]);
+  const [signerNames, setSignerNames] = useState<string[]>(["", "", ""]);
+  const [activeSigner, setActiveSigner] = useState<number | null>(null);
   const ctx = storage.getContext();
   const startedAt = useRef(ctx ? new Date(ctx.startedAt).getTime() : Date.now());
 
