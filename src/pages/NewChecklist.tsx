@@ -16,7 +16,7 @@ export default function NewChecklist() {
   const user = storage.getUser()!;
   const [line, setLine] = useState("");
   const [sku, setSku] = useState("");
-  const [responsavel, setResponsavel] = useState(user.name);
+  const [responsavel, setResponsavel] = useState("");
   const [showFace, setShowFace] = useState(false);
   const [verifiedConfidence, setVerifiedConfidence] = useState<number | null>(null);
 
