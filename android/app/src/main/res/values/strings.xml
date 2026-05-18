@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Projeto_CheckList_Setup_Qualidade</string>
+    <string name="title_activity_main">Projeto_CheckList_Setup_Qualidade</string>
+    <string name="package_name">checklist.setup</string>
+    <string name="custom_url_scheme">checklist.setup</string>
+</resources>
