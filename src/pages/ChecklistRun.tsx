@@ -206,71 +206,100 @@ export default function ChecklistRun() {
         </div>
       </Card>
 
-      {/* Items */}
-      <div className="space-y-3">
-        {checklist.items.map((item, idx) => (
-          <Card key={item.id} className="p-5 shadow-card border-border/60 transition-smooth hover:border-accent/40">
-            <div className="flex items-start gap-4">
-              <div className={`w-9 h-9 shrink-0 rounded-lg grid place-items-center font-display font-bold text-sm ${
-                item.status === "ok" ? "bg-success text-success-foreground"
-                : item.status === "fail" ? "bg-destructive text-destructive-foreground"
-                : "bg-secondary text-muted-foreground"
-              }`}>
-                {item.status === "ok" ? <Check className="w-4 h-4" /> : item.status === "fail" ? <X className="w-4 h-4" /> : idx + 1}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div>
-                    <p className="font-medium leading-snug">
-                      {item.label}
-                      {item.required && <span className="ml-2 text-[10px] mono text-accent uppercase">obrig.</span>}
-                      {item.requiresPhoto && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-[10px] mono text-muted-foreground uppercase">
-                          <Camera className="w-3 h-3" /> foto
-                        </span>
-                      )}
-                    </p>
-                    {item.completedAt && (
-                      <p className="text-[11px] mono text-muted-foreground mt-1">
-                        {new Date(item.completedAt).toLocaleTimeString("pt-BR")} · por {user.name.split(" ")[0]}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={item.status === "ok" ? "default" : "outline"}
-                      onClick={() => setStatus(item, "ok")}
-                      className={item.status === "ok" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
-                    >
-                      <Check className="w-4 h-4 mr-1" /> OK
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={item.status === "fail" ? "default" : "outline"}
-                      onClick={() => setStatus(item, "fail")}
-                      className={item.status === "fail" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
-                    >
-                      <X className="w-4 h-4 mr-1" /> Falha
-                    </Button>
-                  </div>
+      {/* Items grouped by section */}
+      {(() => {
+        const groups = checklist.items.reduce<Record<string, typeof checklist.items>>((acc, it) => {
+          const key = it.section || "Itens";
+          (acc[key] ||= []).push(it);
+          return acc;
+        }, {});
+        let globalIdx = 0;
+        return (
+          <div className="space-y-8">
+            {Object.entries(groups).map(([section, items]) => (
+              <section key={section} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <h2 className="text-xs mono uppercase tracking-widest text-accent font-semibold">{section}</h2>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
+                {items.map((item) => {
+                  globalIdx += 1;
+                  const idx = globalIdx;
+                  return (
+                    <Card key={item.id} className="p-5 shadow-card border-border/60 transition-smooth hover:border-accent/40">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-9 h-9 shrink-0 rounded-lg grid place-items-center font-display font-bold text-sm ${
+                          item.status === "ok" ? "bg-success text-success-foreground"
+                          : item.status === "fail" ? "bg-destructive text-destructive-foreground"
+                          : "bg-secondary text-muted-foreground"
+                        }`}>
+                          {item.status === "ok" ? <Check className="w-4 h-4" /> : item.status === "fail" ? <X className="w-4 h-4" /> : idx}
+                        </div>
 
-                {item.status === "fail" && (
-                  <Textarea
-                    placeholder="Descreva o problema (será enviado ao SharePoint)…"
-                    value={item.note || ""}
-                    onChange={(e) => updateItem(item.id, { note: e.target.value })}
-                    className="mt-3 text-sm"
-                    rows={2}
-                  />
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div className="min-w-0">
+                              <p className="font-medium leading-snug">
+                                {item.label}
+                                {item.required && <span className="ml-2 text-[10px] mono text-accent uppercase">obrig.</span>}
+                                {item.requiresPhoto && (
+                                  <span className="ml-2 inline-flex items-center gap-1 text-[10px] mono text-muted-foreground uppercase">
+                                    <Camera className="w-3 h-3" /> foto
+                                  </span>
+                                )}
+                              </p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{item.description}</p>
+                              )}
+                              {item.responsible && (
+                                <p className="text-[10px] mono uppercase text-muted-foreground mt-1.5">Resp.: {item.responsible}</p>
+                              )}
+                              {item.completedAt && (
+                                <p className="text-[11px] mono text-muted-foreground mt-1">
+                                  {new Date(item.completedAt).toLocaleTimeString("pt-BR")} · por {user.name.split(" ")[0]}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant={item.status === "ok" ? "default" : "outline"}
+                                onClick={() => setStatus(item, "ok")}
+                                className={item.status === "ok" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
+                              >
+                                <Check className="w-4 h-4 mr-1" /> OK
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={item.status === "fail" ? "default" : "outline"}
+                                onClick={() => setStatus(item, "fail")}
+                                className={item.status === "fail" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
+                              >
+                                <X className="w-4 h-4 mr-1" /> Falha
+                              </Button>
+                            </div>
+                          </div>
+
+                          {item.status === "fail" && (
+                            <Textarea
+                              placeholder="Descreva o problema (será enviado ao SharePoint)…"
+                              value={item.note || ""}
+                              onChange={(e) => updateItem(item.id, { note: e.target.value })}
+                              className="mt-3 text-sm"
+                              rows={2}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </section>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Submit bar */}
       <Card className="p-5 shadow-elegant border-accent/30 sticky bottom-4 bg-card/95 backdrop-blur-md">

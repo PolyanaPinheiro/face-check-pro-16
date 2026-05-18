@@ -73,8 +73,11 @@ export const storage = {
 
   getChecklists(): Checklist[] {
     const raw = localStorage.getItem(CHECKLISTS_KEY);
-    if (raw) return JSON.parse(raw);
+    const version = localStorage.getItem(CHECKLISTS_KEY + ":v");
+    const CURRENT_VERSION = "setup-2025-09-22";
+    if (raw && version === CURRENT_VERSION) return JSON.parse(raw);
     localStorage.setItem(CHECKLISTS_KEY, JSON.stringify(seedChecklists));
+    localStorage.setItem(CHECKLISTS_KEY + ":v", CURRENT_VERSION);
     return seedChecklists;
   },
   saveChecklist(cl: Checklist) {
