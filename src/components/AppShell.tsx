@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <ScanFace className="w-4 h-4 text-success" />
                 <div className="flex flex-col leading-tight">
                   <span className="text-xs font-semibold">{user.name.split(" ")[0]}</span>
-                  <span className="text-[10px] mono text-success">{user.confidence.toFixed(1)}% match</span>
+                  <span className="text-[10px] mono text-success">Verificado</span>
                 </div>
               </div>
             )}
@@ -84,7 +84,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <p className="font-semibold mt-1">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                     <p className="text-[11px] mono text-success mt-2">
-                      Verificado · {user.confidence.toFixed(1)}%
+                      Verificado
                     </p>
                   </div>
                 )}

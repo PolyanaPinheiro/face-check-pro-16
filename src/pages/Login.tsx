@@ -49,10 +49,9 @@ export default function Login() {
             Cada item do checklist é assinado biometricamente e sincronizado em tempo real com suas listas
             do Microsoft SharePoint. Sem fraudes. Sem retrabalho.
           </p>
-          <div className="grid grid-cols-3 gap-4 pt-4">
+          <div className="grid grid-cols-2 gap-4 pt-4">
             {[
-              { k: "99.6%", v: "Confiança média" },
-              { k: "<2s", v: "Validação facial" },
+              { k: "Biometria", v: "Validação facial" },
               { k: "100%", v: "Rastreável" },
             ].map((s) => (
               <div key={s.k} className="border-l-2 border-accent/50 pl-3">

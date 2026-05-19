@@ -38,7 +38,7 @@ export default function AccessHistory() {
                 <p className="text-xs mono text-muted-foreground">{d.toLocaleTimeString("pt-BR")}</p>
               </div>
               <span className="hidden sm:inline-flex items-center gap-1 text-xs mono text-success border border-success/30 bg-success/10 px-2 py-1 rounded-full">
-                {a.confidence.toFixed(1)}%
+                Verificado
               </span>
             </div>
           );
