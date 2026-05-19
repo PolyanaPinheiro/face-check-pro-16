@@ -146,7 +146,7 @@ export default function ChecklistRun() {
       return next;
     });
     setActiveSigner(null);
-    toast.success(`Assinatura ${idx + 1} confirmada · ${confidence.toFixed(1)}%`);
+    toast.success(`Assinatura ${idx + 1} confirmada`);
   };
 
   const allSigned = [0, 1, 2].every((i) => signatures[i]);
@@ -169,7 +169,7 @@ export default function ChecklistRun() {
             <ScanFace className="w-4 h-4 text-success" />
             <div className="leading-tight">
               <p className="text-xs font-semibold">{user.name}</p>
-              <p className="text-[10px] mono text-success">VERIFICADO {user.confidence.toFixed(1)}%</p>
+              <p className="text-[10px] mono text-success">VERIFICADO</p>
             </div>
           </div>
         </div>
@@ -401,7 +401,7 @@ export default function ChecklistRun() {
                           <p className="text-xs mono uppercase text-muted-foreground">Assinatura {idx + 1}</p>
                           {sig ? (
                             <p className="text-sm font-medium truncate">
-                              {sig.signer} · <span className="mono text-success">{sig.confidence.toFixed(1)}%</span>
+                              {sig.signer} <span className="mono text-success">· assinado</span>
                             </p>
                           ) : (
                             <Select

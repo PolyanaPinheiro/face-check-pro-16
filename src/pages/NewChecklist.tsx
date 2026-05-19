@@ -27,7 +27,7 @@ export default function NewChecklist() {
   const handleFaceSuccess = ({ confidence }: { confidence: number }) => {
     setVerifiedConfidence(confidence);
     setShowFace(false);
-    toast.success(`Responsável verificado · ${confidence.toFixed(1)}%`);
+    toast.success(`Responsável verificado`);
   };
 
   const start = () => {
@@ -108,7 +108,7 @@ export default function NewChecklist() {
                   {verifiedConfidence ? "Identidade confirmada" : "Reconhecimento facial pendente"}
                 </p>
                 <p className="text-xs mono text-muted-foreground">
-                  {verifiedConfidence ? `${verifiedConfidence.toFixed(1)}% match · AWS Rekognition` : "Será comparado ao cadastro corporativo"}
+                  {verifiedConfidence ? "Identidade confirmada" : "Será comparado ao cadastro corporativo"}
                 </p>
               </div>
             </div>

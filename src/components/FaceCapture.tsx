@@ -125,7 +125,7 @@ export default function FaceCapture({
               </div>
             </div>
             <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/20 backdrop-blur-md text-xs mono text-primary-foreground border border-primary-foreground/20">
-              {phase === "scanning" ? "POSICIONE O ROSTO" : `ANALISANDO ${progress}%`}
+              {phase === "scanning" ? "POSICIONE O ROSTO" : "ANALISANDO"}
             </div>
           </>
         )}
