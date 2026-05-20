@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
-import Verify from "./pages/Verify.tsx";
+/* import Verify from "./pages/Verify.tsx"; */
 import Dashboard from "./pages/Dashboard.tsx";
 import ChecklistRun from "./pages/ChecklistRun.tsx";
 import NewChecklist from "./pages/NewChecklist.tsx";
@@ -32,7 +32,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/verify" element={<Verify />} />
+{/*           <Route path="/verify" element={<Verify />} /> */}
           <Route path="/app" element={wrap(<Dashboard />)} />
           <Route path="/app/checklist/novo" element={wrap(<NewChecklist />)} />
           <Route path="/app/checklists/:id" element={wrap(<ChecklistRun />)} />
