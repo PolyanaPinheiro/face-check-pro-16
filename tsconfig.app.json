@@ -2,11 +2,12 @@
   "compilerOptions": {
     "types": ["vitest/globals"],
     "target": "ES2020",
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": false,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
 
+    
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -21,6 +22,11 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowJs": true,
+    "strictNullChecks": false,
 
     "paths": {
       "@/*": ["./src/*"]

@@ -5,6 +5,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,
