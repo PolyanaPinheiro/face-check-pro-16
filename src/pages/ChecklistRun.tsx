@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RESPONSAVEL_OPTIONS } from "@/data/options";
 import { toast } from "sonner";
+import axios from 'axios';
+
 
 export default function ChecklistRun() {
   const { id } = useParams();
@@ -28,6 +30,8 @@ export default function ChecklistRun() {
   const [activeSigner, setActiveSigner] = useState<number | null>(null);
   const ctx = storage.getContext();
   const startedAt = useRef(ctx ? new Date(ctx.startedAt).getTime() : Date.now());
+  // Guarda até 3 fotos em string Base64 (uma para cada índice de assinatura)
+  const [capturedPhotos, setCapturedPhotos] = useState<{ [key: number]: string }>({});  
 
   useEffect(() => {
     const found = storage.getChecklists().find((c) => c.id === id) || null;
@@ -129,25 +133,64 @@ export default function ChecklistRun() {
     navigate("/app");
   };
 
-  const handleSignerCapture = (idx: number, confidence: number) => {
-    const name = signerNames[idx].trim();
-    if (!name) {
-      toast.error("Selecione o nome do assinante.");
-      return;
+  const handleSignerCapture = async (idx: number, confidence: number, imageBase64: string) => {
+  const name = signerNames[idx]?.trim();
+  if (!name) {
+    toast.error("Selecione o nome do assinante.");
+    return;
+  }
+
+  if (signatures.some((s) => s?.signer === name)) {
+    toast.error("Este responsável já assinou.");
+    return;
+  }
+
+  try {
+    // 1. FAZ O HTTP REQUEST REAL PARA A SUA API NODE.JS
+    const response = await axios.post("http://localhost:3000/api/face/validate", {
+      image: imageBase64,  // Passa a string da foto que veio da câmera
+      user_id: name        // Passa o nome selecionado
+    });
+
+    const resultado = response.data;
+
+    // 2. CONFERE SE A IA DO PYTHON/NODE APROVOU A FACE
+    if (resultado.validated) {
+      const sig: Signature = { 
+        signer: name, 
+        confidence: parseFloat(resultado.score || confidence.toFixed(2)), 
+        at: new Date().toISOString() 
+      };
+
+      setSignatures((prev) => {
+        const next = [...prev];
+        next[idx] = sig;
+        return next;
+      });
+
+      setActiveSigner(null);
+      toast.success(`Assinatura ${idx + 1} confirmada! Score: ${resultado.score}`);
+    } else {
+      // Se a IA rejeitar, removemos o preview da foto da tela para o usuário tentar de novo
+      setCapturedPhotos(prev => {
+        const next = { ...prev };
+        delete next[idx];
+        return next;
+      });
+      toast.error(`Acesso negado: ${resultado.message}`);
     }
-    if (signatures.some((s) => s.signer === name)) {
-      toast.error("Este responsável já assinou.");
-      return;
-    }
-    const sig: Signature = { signer: name, confidence, at: new Date().toISOString() };
-    setSignatures((prev) => {
-      const next = [...prev];
-      next[idx] = sig;
+
+  } catch (error: any) {
+    console.error("Erro na validação facial:", error);
+    // Remove a foto caso dê erro de conexão
+    setCapturedPhotos(prev => {
+      const next = { ...prev };
+      delete next[idx];
       return next;
     });
-    setActiveSigner(null);
-    toast.success(`Assinatura ${idx + 1} confirmada`);
-  };
+    toast.error(error.response?.data?.error || "Erro ao conectar com o servidor de biometria.");
+  }
+};
 
   const allSigned = [0, 1, 2].every((i) => signatures[i]);
 
@@ -168,7 +211,7 @@ export default function ChecklistRun() {
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-success/10 border border-success/20 text-sm self-start">
             <ScanFace className="w-4 h-4 text-success" />
             <div className="leading-tight">
-              <p className="text-xs font-semibold">{user.name}</p>
+              <p className="text-xs font-semibold">Poly</p>
               <p className="text-[10px] mono text-success">VERIFICADO</p>
             </div>
           </div>
@@ -376,7 +419,7 @@ export default function ChecklistRun() {
           )}
         </DialogContent>
       </Dialog>
-
+          @TODO:
       {/* Sign dialog */}
       <Dialog open={showSign} onOpenChange={(o) => !submitting && setShowSign(o)}>
         <DialogContent className="max-w-xl">
@@ -390,8 +433,10 @@ export default function ChecklistRun() {
               </p>
               {[0, 1, 2].map((idx) => {
                 const sig = signatures[idx];
+                const fotoExistente = capturedPhotos[idx]; // Busca se já temos a foto na memória
+
                 return (
-                  <Card key={idx} className="p-4 border-border/60">
+                  <Card key={idx} className="p-4 border-border/60 space-y-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`w-9 h-9 rounded-lg grid place-items-center ${sig ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"}`}>
@@ -422,10 +467,25 @@ export default function ChecklistRun() {
                         </Button>
                       )}
                     </div>
+
+                    {/* MODIFICAÇÃO VISUAL: Se a foto já foi tirada e validada, mostra o preview dela na tela! */}
+                    {sig && fotoExistente && (
+                      <div className="w-24 h-24 rounded-lg overflow-hidden border border-border shadow-sm bg-muted mt-2">
+                        <img src={fotoExistente} alt="Face capturada" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+
                     {activeSigner === idx && (
                       <div className="mt-4 border-t pt-4">
                         <FaceCapture
-                          onSuccess={({ confidence }) => handleSignerCapture(idx, confidence)}
+                          // Alteramos o onSuccess para pegar também a string da foto que a câmera gerou
+                          onSuccess={({ confidence, image }) => {
+                            // 1. Guarda a foto na memória da tela para vermos ela no <img> ali em cima
+                            setCapturedPhotos(prev => ({ ...prev, [idx]: image }));
+                            
+                            // 2. Dispara a chamada HTTP Request que criamos no passo anterior
+                            handleSignerCapture(idx, confidence, image); 
+                          }}
                           label="Iniciar câmera"
                         />
                       </div>

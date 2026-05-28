@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,10 +35,11 @@ export default function Dashboard() {
         <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full gradient-accent blur-3xl opacity-30" />
         <div className="relative space-y-4 max-w-2xl">
           <p className="text-xs mono uppercase tracking-widest text-accent flex items-center gap-2">
-            <Activity className="w-3 h-3" /> SESSÃO VERIFICADA · {new Date(user.faceVerifiedAt).toLocaleTimeString("pt-BR")}
+           {/*  <Activity className="w-3 h-3" /> SESSÃO VERIFICADA · {new Date(user.faceVerifiedAt).toLocaleTimeString("pt-BR")} */}
+           SESSÃO VERIFICADA 
           </p>
           <h1 className="font-display text-3xl sm:text-4xl font-bold">
-            Bem-vinda, {user.name.split(" ")[0]}.
+            Bem-vinda, Poly {/* {user.name.split(" ")[0]} */}.
           </h1>
           <p className="text-primary-foreground/75 max-w-lg">
             Inicie um novo checklist ou consulte o histórico das execuções anteriores. Cada item é assinado biometricamente e enviado ao SharePoint.

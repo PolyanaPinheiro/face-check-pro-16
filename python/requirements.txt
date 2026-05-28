@@ -1,0 +1,9 @@
+fastapi==0.110.0
+uvicorn==0.28.0
+deepface==0.0.92
+opencv-python-headless==4.9.0.80
+psycopg2-binary==2.9.9
+pydantic==2.6.4
+python-dotenv==1.0.1
+numpy==1.26.4
+tf-keras==2.16.0

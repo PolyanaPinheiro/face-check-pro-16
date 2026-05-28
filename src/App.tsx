@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
-/* import Verify from "./pages/Verify.tsx"; */
+import Verify from "./pages/Verify.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import ChecklistRun from "./pages/ChecklistRun.tsx";
 import NewChecklist from "./pages/NewChecklist.tsx";
@@ -18,7 +18,7 @@ import AppShell from "./components/AppShell.tsx";
 import RequireAuth from "./components/RequireAuth.tsx";
 
 const queryClient = new QueryClient();
-
+<Route path="/verify" element={<Verify />} />
 const wrap = (node: React.ReactNode) => (
   <RequireAuth><AppShell>{node}</AppShell></RequireAuth>
 );
@@ -31,14 +31,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-{/*           <Route path="/verify" element={<Verify />} /> */}
-          <Route path="/app" element={wrap(<Dashboard />)} />
-          <Route path="/app/checklist/novo" element={wrap(<NewChecklist />)} />
-          <Route path="/app/checklists/:id" element={wrap(<ChecklistRun />)} />
-          <Route path="/app/historico" element={wrap(<History />)} />
-          <Route path="/app/acessos" element={wrap(<AccessHistory />)} />
-          <Route path="/app/tutorial" element={wrap(<Tutorial />)} />
+         {/*  <Route path="/login" element={<Login />} /> */}
+
+          <Route path="/app" element={<Dashboard />} />
+          <Route path="/app/checklist/novo" element={(<NewChecklist />)} />
+          <Route path="/app/checklists/:id" element={(<ChecklistRun />)} />
+          <Route path="/app/historico" element={(<History />)} />
+          <Route path="/app/acessos" element={(<AccessHistory />)} />
+          <Route path="/app/tutorial" element={(<Tutorial />)} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -17,7 +17,7 @@ export default function Login() {
       email,
       role: "Supervisora de Operações",
     }));
-    navigate("/verify");
+    navigate("/app");
   };
 
   return (
