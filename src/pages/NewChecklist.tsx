@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight, Factory, Package, ScanFace, CheckCircle2, User } from "lucide-react";
 import FaceCapture from "@/components/FaceCapture";
 import { storage } from "@/lib/storage";
+import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,10 +25,26 @@ export default function NewChecklist() {
 
   const canVerify = line.trim() && sku.trim() && responsavel.trim();
 
-  const handleFaceSuccess = ({ confidence }: { confidence: number }) => {
-    setVerifiedConfidence(confidence);
-    setShowFace(false);
-    toast.success(`Responsável verificado`);
+  const handleFaceSuccess = async ({ confidence, image }: { confidence: number; image: string }) => {
+    try {
+      // Valida o rosto do responsável contra o banco antes de liberar o checklist
+      const response = await axios.post("http://localhost:3001/api/face/validate", {
+        image,
+        user_id: responsavel.trim(),
+      });
+      const resultado = response.data;
+      if (!resultado.validated) {
+        throw new Error(resultado.message || "Biometria não confere com o responsável selecionado.");
+      }
+      setVerifiedConfidence(parseFloat(resultado.score) || confidence);
+      setShowFace(false);
+      toast.success("Responsável verificado com sucesso!");
+    } catch (error: any) {
+      // Propaga o erro para o FaceCapture exibir tela vermelha
+      const msg = error?.response?.data?.error || error?.message || "Erro ao validar biometria.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
   };
 
   const start = () => {

@@ -133,32 +133,42 @@ export default function ChecklistRun() {
     navigate("/app");
   };
 
-  const handleSignerCapture = async (idx: number, confidence: number, imageBase64: string) => {
+const handleSignerCapture = async (idx: number, confidence: number, imageBase64: string) => {
   const name = signerNames[idx]?.trim();
   if (!name) {
     toast.error("Selecione o nome do assinante.");
-    return;
+    throw new Error("Selecione o nome do assinante.");
   }
 
   if (signatures.some((s) => s?.signer === name)) {
     toast.error("Este responsável já assinou.");
-    return;
+    throw new Error("Este responsável já assinou.");
   }
 
+  console.log("✈️ [FRONTEND] 1. Função acionada! Preparando para enviar foto do usuário:", name);
+
   try {
-    // 1. FAZ O HTTP REQUEST REAL PARA A SUA API NODE.JS
-    const response = await axios.post("http://localhost:3000/api/face/validate", {
-      image: imageBase64,  // Passa a string da foto que veio da câmera
-      user_id: name        // Passa o nome selecionado
+    // Dispara a foto em formato Base64 para a API Gatekeeper do Node.js
+    const response = await axios.post("http://localhost:3001/api/face/validate", {
+      image: imageBase64,  
+      user_id: name        
     });
 
-    const resultado = response.data;
+    // Garante que temos dados válidos na resposta
+    const resultado = response?.data;
 
-    // 2. CONFERE SE A IA DO PYTHON/NODE APROVOU A FACE
+    if (!resultado) {
+      throw new Error("O servidor retornou uma resposta vazia.");
+    }
+    console.log("📥 [FRONTEND] 4. Resposta recebida do Servidor Node:", resultado);
+    // Se a IA do Python + Node der sinal verde
     if (resultado.validated) {
+      // Proteção de Fallback: Se o score não vier da API, usa a confiança da câmera
+      const finalScore = resultado.score ? parseFloat(resultado.score) : parseFloat(confidence.toFixed(2));
+
       const sig: Signature = { 
         signer: name, 
-        confidence: parseFloat(resultado.score || confidence.toFixed(2)), 
+        confidence: finalScore, 
         at: new Date().toISOString() 
       };
 
@@ -168,27 +178,43 @@ export default function ChecklistRun() {
         return next;
       });
 
-      setActiveSigner(null);
-      toast.success(`Assinatura ${idx + 1} confirmada! Score: ${resultado.score}`);
+      // Dá 1.5 segundos para o usuário ver o sucesso antes de sumir com a câmera da tela
+      setTimeout(() => {
+        setActiveSigner(null);
+      }, 1500);
+
+      toast.success(`Assinatura ${idx + 1} confirmada!`);
+      return;
+
     } else {
-      // Se a IA rejeitar, removemos o preview da foto da tela para o usuário tentar de novo
+      // Se a IA der sinal vermelho (Não é a mesma pessoa)
+      // Remove o preview da foto para obrigar a tirar outra
       setCapturedPhotos(prev => {
         const next = { ...prev };
         delete next[idx];
         return next;
       });
-      toast.error(`Acesso negado: ${resultado.message}`);
+
+      toast.error(`Acesso negado: ${resultado.message || "Biometria incorreta."}`);
+      throw new Error(resultado.message || "Biometria não confere.");
     }
 
   } catch (error: any) {
-    console.error("Erro na validação facial:", error);
-    // Remove a foto caso dê erro de conexão
+    console.error("Erro capturado no fluxo de validação facial:", error);
+    
+    // Limpa a foto inválida do estado da tela
     setCapturedPhotos(prev => {
       const next = { ...prev };
       delete next[idx];
       return next;
     });
-    toast.error(error.response?.data?.error || "Erro ao conectar com o servidor de biometria.");
+    
+    // Captura o erro exato que veio da API do Node para exibir na tela
+    const msgErroServidor = error.response?.data?.error || error.message || "Erro de conexão.";
+    toast.error(`Erro de Biometria: ${msgErroServidor}`);
+    
+    // Lança o erro para o FaceCapture.tsx ficar vermelho e travar o fechamento automático
+    throw new Error(msgErroServidor);
   }
 };
 
@@ -462,7 +488,7 @@ export default function ChecklistRun() {
                         </div>
                       </div>
                       {!sig && (
-                        <Button size="sm" variant="outline" disabled={!signerNames[idx]} onClick={() => setActiveSigner(idx)}>
+                        <Button size="sm" variant="outline" disabled={!signerNames[idx]} onClick={() =>  {console.log("🚨 [CLIQUE] Botão Assinar pressionado para o índice:", idx);setActiveSigner(idx)}}>
                           Assinar
                         </Button>
                       )}
@@ -479,12 +505,13 @@ export default function ChecklistRun() {
                       <div className="mt-4 border-t pt-4">
                         <FaceCapture
                           // Alteramos o onSuccess para pegar também a string da foto que a câmera gerou
-                          onSuccess={({ confidence, image }) => {
+                          onSuccess={async ({ confidence, image }) => {
                             // 1. Guarda a foto na memória da tela para vermos ela no <img> ali em cima
                             setCapturedPhotos(prev => ({ ...prev, [idx]: image }));
                             
-                            // 2. Dispara a chamada HTTP Request que criamos no passo anterior
-                            handleSignerCapture(idx, confidence, image); 
+                            // 2. AGUARDA a chamada HTTP - o return é essencial para o FaceCapture
+                            //    capturar erros e mostrar a tela vermelha corretamente
+                            return handleSignerCapture(idx, confidence, image); 
                           }}
                           label="Iniciar câmera"
                         />

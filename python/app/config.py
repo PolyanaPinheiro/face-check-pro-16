@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://usuario:senha@localhost:5432/facecheckdb")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://usuario:senha@localhost:5432/facial")
     PORT: int = int(os.getenv("PORT", 8000))
     # Combinação de duas bibliotecas para lidar com variáveis de ambiente:
     # Pydantic e Dotenv. O Pydantic é usado para definir uma classe de

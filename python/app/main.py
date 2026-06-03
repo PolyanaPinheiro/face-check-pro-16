@@ -2,10 +2,8 @@
 """ Esse codigo serve para criar um microserviço de IA de reconhecimento facial utilizando a biblioteca DeepFace. Ele expõe duas APIs principais: uma para registrar a biometria facial do operador durante o onboarding, e outra para validar essa biometria durante o checklist diário. O serviço é construído com FastAPI, garantindo alta performance e facilidade de integração com outros sistemas. A comunicação entre o frontend (ou API intermediária) e este microserviço é feita através de requisições HTTP, onde as imagens são enviadas em formato Base64. O serviço processa essas imagens, extrai os embeddings faciais usando o modelo Facenet512, e armazena ou compara esses embeddings conforme necessário. A arquitetura é projetada para ser escalável e segura, garantindo que os dados sensíveis sejam tratados adequadamente. """
 #------------------------------------------------------------------------------------
 
-
-
-
 import uvicorn
+import numpy as np  # Biblioteca matemática adicionada para resolver o Bug 3
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from deepface import DeepFace
@@ -55,54 +53,46 @@ def register_face(payload: FaceRegisterRequest):
             
         return {"success": True, "message": "Biometria facial mapeada e salva com sucesso."}
         
+    except HTTPException as http_err:
+        raise http_err
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro no processamento da imagem: {str(e)}")
 
 
 @app.post("/validate")
 def validate_face(payload: FaceValidateRequest):
-    """Compara o frame atual capturado no checklist com o vetor guardado no banco de dados"""
+    """Pega o Base64 do banco, o Base64 da câmera e joga no DeepFace"""
     try:
-        # 1. Recupera o vetor guardado no banco do respectivo operador
-        embedding_banco = FaceRepository.buscar_embedding_por_usuario(payload.user_id)
+        # 1. Busca a string Base64 que você acabou de criar na tabela do banco
+        base64_do_banco = FaceRepository.buscar_embedding_por_usuario(payload.user_id)
         
-        if not embedding_banco:
-            raise HTTPException(status_code=44, detail="Operador não possui nenhuma assinatura facial cadastrada.")
+        if not base64_do_banco:
+            raise HTTPException(status_code=404, detail="Operador não possui nenhuma assinatura facial cadastrada.")
             
-        # 2. Transforma o frame vindo da câmera do celular em imagem cv2
-        img_atual_cv2 = base64_to_cv2(payload.image)
+        # 2. Transforma as DUAS strings Base64 em imagens que o OpenCV/DeepFace entendem
+        img_banco_cv2 = base64_to_cv2(base64_do_banco)   # Foto antiga do banco
+        img_atual_cv2 = base64_to_cv2(payload.image)      # Foto nova da câmera do celular
         
-        # 3. Extrai o embedding do frame atual
-        embeddings_atuais_meta = DeepFace.represent(
-            img_path=img_atual_cv2,
-            model_name=MODEL_NAME,
-            enforce_detection=False, # Evita quebras se o operador piscar ou se mover rápido demais
-            detector_backend="opencv"
-        )
-        
-        if not embeddings_atuais_meta or len(embeddings_atuais_meta) == 0:
-            raise HTTPException(status_code=400, detail="Não foi possível mapear o rosto no frame da câmera.")
-            
-        embedding_atual = embeddings_atuais_meta[0]["embedding"]
-        
-        # 4. Executa a verificação matemática comparando os dois vetores (Distância Coseno)
-        # O DeepFace aceita passar os próprios vetores brutos como entrada nos campos de imagem
+        # 3. O DeepFace faz a mágica: compara as duas imagens brutas diretamente!
         result = DeepFace.verify(
-            img1_path=embedding_atual,
-            img2_path=embedding_banco,
+            img1_path=img_atual_cv2,
+            img2_path=img_banco_cv2,
             model_name=MODEL_NAME,
             distance_metric="cosine",
             enforce_detection=False
         )
         
-        # Devolve exatamente a assinatura esperada pela API intermediária do Node.js
+        # Devolve o resultado limpo para o Node e o Frontend
         return {
             "match": bool(result["verified"]),
             "distance": float(result["distance"])
         }
         
+    except HTTPException as http_err:
+        raise http_err
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Falha interna na verificação: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)
+    # Mudamos de "main:app" para "app.main:app" para o uvicorn achar o módulo correto
+    uvicorn.run("app.main:app", host="0.0.0.0", port=settings.PORT, reload=True)

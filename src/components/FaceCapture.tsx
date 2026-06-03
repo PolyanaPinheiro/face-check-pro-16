@@ -8,7 +8,7 @@ export default function FaceCapture({
   onSuccess,
   label = "Validar identidade",
 }: {
-  onSuccess: (snapshot: { confidence: number; image: string }) => void;
+  onSuccess: (snapshot: { confidence: number; image: string }) => Promise<void> | void;
   label?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,17 +40,12 @@ export default function FaceCapture({
     }
   };
 
-  const stop = () => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  };
-
-  const capture = async () => {
+const capture = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     setPhase("analyzing");
-    setProgress(0);
+    setProgress(30);
 
-    // Snapshot
+    // 1. Tira o snapshot estático do frame do vídeo
     const v = videoRef.current;
     const c = canvasRef.current;
     c.width = v.videoWidth;
@@ -58,19 +53,29 @@ export default function FaceCapture({
     c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height);
     const image = c.toDataURL("image/jpeg", 0.85);
 
-    // Simulate AWS Rekognition CompareFaces call (4 stages)
-    const stages = [25, 55, 80, 100];
-    for (const p of stages) {
-      await new Promise((r) => setTimeout(r, 450));
-      setProgress(p);
-    }
+    setProgress(60);
 
-    const confidence = 96 + Math.random() * 3.5;
-    setPhase("success");
-    setTimeout(() => {
+    try {
+      // Enviamos a foto e AGUARDAMOS a API Node/Python processar tudo
+      await onSuccess({ confidence: 95, image });
+      
+      // Se a API aceitar, mostra o estado de sucesso (tela verde)
+      setPhase("success");
+      setProgress(100);
+      
+      // Espera 1.5 segundos com a tela verde para o usuário ver que deu certo, e aí sim fecha
+      setTimeout(() => {
+        stop();
+        setPhase("idle"); // Reseta para o estado inicial caso reabram
+      }, 1500);
+
+    } catch (e: any) {
+      console.error("Falha no processamento de biometria:", e);
+      // Se a API rejeitar ou der erro, o código cai aqui e a tela fica vermelha com o erro
       stop();
-      onSuccess({ confidence, image });
-    }, 800);
+      setError(e?.message || "Assinatura facial rejeitada pelo servidor.");
+      setPhase("error");
+    }
   };
 
   return (
@@ -166,7 +171,7 @@ export default function FaceCapture({
             {label}
           </Button>
         ) : phase === "scanning" ? (
-          <Button size="lg" onClick={capture} className="gap-2 gradient-accent text-accent-foreground hover:opacity-90 shadow-glow">
+          <Button size="lg" onClick={() => { console.log("🚨 [CLIQUE] Botão Capturar e validar pressionado"); capture(); }} className="gap-2 gradient-accent text-accent-foreground hover:opacity-90 shadow-glow">
             <ScanFace className="w-4 h-4" />
             Capturar e validar
           </Button>
