@@ -36,7 +36,7 @@ def register_face(payload: FaceRegisterRequest):
         embeddings_meta = DeepFace.represent(
             img_path=img_cv2,
             model_name=MODEL_NAME,
-            enforce_detection=True,
+            enforce_detection=False,
             detector_backend="opencv"
         )
         

@@ -37,7 +37,7 @@ class FaceRepository:
             embedding_str = f"[{','.join(map(str, embedding))}]"
             
             cursor.execute(
-                'INSERT INTO face_signatures ("user_id", embedding) VALUES (%s, %s::vector);',
+                "INSERT INTO face_signatures (user_id, embedding) VALUES (%s, %s)",
                 (user_id, embedding_str)
             )
             conn.commit()

@@ -13,11 +13,10 @@ CREATE DATABASE facial
     CONNECTION LIMIT = -1
     IS_TEMPLATE = False;
 
-CREATE TABLE usuario (
-    id_usuario SERIAL NOT NULL,           -- Cria o ID automático
-    nome VARCHAR(100) NOT NULL,
-    imagem_registro TEXT NOT NULL,        -- TEXT aceita o texto gigante do Base64 completo
-
-    PRIMARY KEY (id_usuario)
+CREATE TABLE face_signatures (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    embedding TEXT NOT NULL
 );
 
+describe face_signatures;
