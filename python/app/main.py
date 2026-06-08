@@ -11,6 +11,9 @@ from app.utils import base64_to_cv2
 from app.repository import FaceRepository
 from app.config import settings
 
+import json
+from scipy.spatial.distance import cosine
+
 app = FastAPI(title="Microserviço de Inteligência Facial DeepFace", version="1.0.0")
 
 # Modelos de entrada para validação de tipo das APIs (Pydantic)
@@ -61,38 +64,51 @@ def register_face(payload: FaceRegisterRequest):
 
 @app.post("/validate")
 def validate_face(payload: FaceValidateRequest):
-    """Pega o Base64 do banco, o Base64 da câmera e joga no DeepFace"""
+    """Compara os embeddings numéricos salvos no banco com a nova foto da câmera"""
     try:
-        # 1. Busca a string Base64 que você acabou de criar na tabela do banco
-        base64_do_banco = FaceRepository.buscar_embedding_por_usuario(payload.user_id)
+        # 1. Busca os números (embedding) que estão na tabela do banco
+        embedding_banco_raw = FaceRepository.buscar_embedding_por_usuario(payload.user_id)
         
-        if not base64_do_banco:
+        if not embedding_banco_raw:
             raise HTTPException(status_code=404, detail="Operador não possui nenhuma assinatura facial cadastrada.")
             
-        # 2. Transforma as DUAS strings Base64 em imagens que o OpenCV/DeepFace entendem
-        img_banco_cv2 = base64_to_cv2(base64_do_banco)   # Foto antiga do banco
-        img_atual_cv2 = base64_to_cv2(payload.image)      # Foto nova da câmera do celular
+        # CONSERTO CRÍTICO: Como salvamos como TEXT, transforma a string do banco de volta em lista de números
+        if isinstance(embedding_banco_raw, str):
+            embedding_banco = json.loads(embedding_banco_raw)
+        else:
+            embedding_banco = embedding_banco_raw
         
-        # 3. O DeepFace faz a mágica: compara as duas imagens brutas diretamente!
-        result = DeepFace.verify(
-            img1_path=img_atual_cv2,
-            img2_path=img_banco_cv2,
+        # 2. Transforma a foto NOVA da câmera em uma imagem que o OpenCV entende
+        img_atual_cv2 = base64_to_cv2(payload.image)
+        
+        # 3. A IA extrai os 512 números APENAS da foto nova da câmera
+        result_atual = DeepFace.represent(
+            img_path=img_atual_cv2,
             model_name=MODEL_NAME,
-            distance_metric="cosine",
             enforce_detection=False
         )
+        embedding_atual = result_atual[0]["embedding"]
         
-        # Devolve o resultado limpo para o Node e o Frontend
+        # 4. Compara os números do banco com os números da câmera usando a distância do cosseno
+        # (Exatamente a matemática que o DeepFace usa por dentro no .verify)
+        distancia = cosine(embedding_banco, embedding_atual)
+        
+        # O limite padrão de mercado para o modelo Facenet/VGG-Face varia, 
+        # mas geralmente se a distância for MENOR que 0.40, é a mesma pessoa!
+        LIMITE_CORRESPONDENCIA = 0.40
+        is_match = bool(distancia < LIMITE_CORRESPONDENCIA)
+        
+        # Devolve o resultado perfeito para o Node e o Frontend
         return {
-            "match": bool(result["verified"]),
-            "distance": float(result["distance"])
+            "match": is_match,
+            "distance": float(distancia)
         }
         
     except HTTPException as http_err:
         raise http_err
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Falha interna na verificação: {str(e)}")
-
+    
 if __name__ == "__main__":
     # Mudamos de "main:app" para "app.main:app" para o uvicorn achar o módulo correto
     uvicorn.run("app.main:app", host="0.0.0.0", port=settings.PORT, reload=True)

@@ -10,7 +10,7 @@ class FaceRepository:
         try:
             # Seleciona convertendo o tipo vector(512) para texto para leitura limpa do Python
             cursor.execute(
-                'SELECT embedding::text FROM face_signatures WHERE "user_id" = %s ORDER BY "created_at" DESC LIMIT 1;',
+                'SELECT embedding FROM face_signatures WHERE user_id = %s LIMIT 1',
                 (user_id,)
             )
             registro = cursor.fetchone()

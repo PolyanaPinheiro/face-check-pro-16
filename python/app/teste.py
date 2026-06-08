@@ -21,7 +21,7 @@ except FileNotFoundError:
 
 # 2. Configura os dados que vão para o banco
 payload = {
-    "user_id": "Poly",
+    "user_id": "Polyana",
     "image": IMAGEM_COM_CABECALHO
 }
 

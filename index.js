@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 // Ajustado para 3000 para bater com as chamadas que o Lovable faz no Front
 const PORT = process.env.PORT || 3001; 
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
+const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://100.100.209.74:8000';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
