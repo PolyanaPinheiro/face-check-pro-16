@@ -28,7 +28,7 @@ payload = {
 # 3. Dispara o envio para a sua API Node
 try:
     print("🚀 Enviando imagem real convertida para a API...")
-    resposta = requests.post("http://localhost:3001/api/face/register", json=payload)
+    resposta = requests.post("http://127.0.0.1:3001/api/face/register", json=payload)
     print(f"📡 Status Code: {resposta.status_code}")
     print(f"📥 Resposta do Servidor: {resposta.json()}")
 except Exception as e:

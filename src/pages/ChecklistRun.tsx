@@ -149,7 +149,7 @@ const handleSignerCapture = async (idx: number, confidence: number, imageBase64:
 
   try {
     // Dispara a foto em formato Base64 para a API Gatekeeper do Node.js
-    const response = await axios.post("http://localhost:3001/api/face/validate", {
+    const response = await axios.post("http://127.0.0.1:3001/api/face/validate", {
       image: imageBase64,  
       user_id: name        
     });

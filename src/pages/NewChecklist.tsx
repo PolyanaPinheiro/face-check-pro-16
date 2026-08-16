@@ -28,7 +28,7 @@ export default function NewChecklist() {
   const handleFaceSuccess = async ({ confidence, image }: { confidence: number; image: string }) => {
     try {
       // Valida o rosto do responsável contra o banco antes de liberar o checklist
-      const response = await axios.post("http://localhost:3001/api/face/validate", {
+      const response = await axios.post("http://127.0.0.1:3001/api/face/validate", {
         image,
         user_id: responsavel.trim(),
       });

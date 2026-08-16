@@ -1,0 +1,6 @@
+npm install @capacitor/cli @capacitor/core
+pip install uvicorn[standard]
+pip install fastapi[standard]
+pip install deepface
+pip install tf-keras
+ver a porta do postgree
